@@ -1,0 +1,1 @@
+ansible all -i inventory.ini -a "uptime" --ask-pass    

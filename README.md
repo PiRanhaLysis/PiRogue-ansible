@@ -17,4 +17,4 @@ Simply run the following command:
 ```
 ansible-playbook -i inventory.ini --ask-pass pirogue.yml
 ```
-It will ask you an SSH password, use `toor` if you do not have change your password on your PiRogue, otherwise, use your new passord.
+It will ask you an SSH password, use `toor` if you do not have changed your password on your PiRogue, otherwise, use your new password.

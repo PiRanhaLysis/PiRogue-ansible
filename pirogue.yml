@@ -2,6 +2,3 @@
 - hosts: all
   roles :
     - {role: "pirogue"}
-  handlers:
-    - name: Expand filesystem
-      command: resize2fs /dev/mmcblk0p2

@@ -1,1 +1,1 @@
-@reboot /usr/bin/python /usr/share/PiRogue/oled-screen/boot.py
+@reboot root /usr/bin/python /usr/share/PiRogue/oled-screen/boot.py

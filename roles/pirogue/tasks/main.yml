@@ -3,11 +3,6 @@
     msg: "The PiRogue does not have wlan1 interface - {{ansible_interfaces}}"
   when: '"wlan1" not in ansible_interfaces'
 
-- name: Upgrade Kali GNU/Linux
-  apt:
-    upgrade: dist
-    update_cache: yes
-
 - name: Install common dependencies
   apt: pkg={{item}} state=installed update_cache=yes cache_valid_time=10800
   with_items:

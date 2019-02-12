@@ -1,0 +1,39 @@
+---
+- name: i2c (used for oled screen; dtparam=i2c1) is enabled in /boot/config.txt
+  lineinfile:
+    path: "/boot/config.txt"
+    regexp: ".*dtparam\\s*\\=\\s*i2c1\\s*\\=\\s*on"
+    line: "dtparam=i2c1=on"
+
+- name: i2c (used for oled screen; dtparam=i2c_arm) is enabled in /boot/config.txt
+  lineinfile:
+    path: "/boot/config.txt"
+    regexp: ".*dtparam\\s*\\=\\s*i2c_arm\\s*\\=\\s*on"
+    line: "dtparam=i2c_arm=on"
+
+- name: i2c-dev is present in /etc/modules
+  lineinfile:
+    path: "/etc/modules"
+    regexp: ".*i2c\\-dev.*"
+    line: "i2c-dev"
+
+- name: i2c-bcm2708 module is not in kernel blacklist
+  lineinfile:
+    path: "/etc/modprobe.d/raspi-blacklist.conf"
+    regexp: ".*i2c\\-bcm2708.*"
+    state: "absent"
+
+- name: i2c_bcm2708 module is not in kernel blacklist
+  lineinfile:
+    path: "/etc/modprobe.d/raspi-blacklist.conf"
+    regexp: ".*i2c_bcm2708.*"
+    state: "absent"
+
+- name: enable i2c instantly
+  command: "{{ item }}"
+  loop:
+    - "modprobe i2c-bcm2708"
+    - "dtparam i2c1=on"
+    - "dtparam i2c_arm=on"
+
+

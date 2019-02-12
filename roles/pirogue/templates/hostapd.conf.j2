@@ -1,0 +1,22 @@
+interface=wlan1
+driver=nl80211
+
+channel={{ pirogue_wifi_channel | default(6) }}
+
+ssid={{ pirogue_wifi_ssid | default('PiRogue') }}
+
+{% if not pirogue_wifi_disable_wpa2 | default(False) %}
+# 1=wpa, 2=wep, 3=both
+auth_algs=1
+
+# WPA2 only
+wpa=2
+
+wpa_key_mgmt=WPA-PSK
+rsn_pairwise=CCMP
+
+# wifi password
+wpa_passphrase={{ pirogue_wifi_wpa2_password | default('pirogue') }}
+{% else %}
+auth_algs=3
+{% endif %}

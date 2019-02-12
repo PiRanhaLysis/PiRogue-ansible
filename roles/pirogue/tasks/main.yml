@@ -1,42 +1,26 @@
+---
+- include: common.yml
+
 - name: Check the PiRogue has 2 Wlan interfaces
   fail:
     msg: "The PiRogue does not have wlan1 interface - {{ansible_interfaces}}"
   when: '"wlan1" not in ansible_interfaces'
 
-- name: Install common dependencies
-  apt: pkg={{item}} state=installed update_cache=yes cache_valid_time=10800
-  with_items:
-    - git
-    - virtualenv
-    - bash-completion
-    - vim
-    - dexdump
-    - adb
-    - gcc
-    - htop
-    - thunar-archive-plugin
-    - ntp
-    - build-essential
-    - python-dev
-    - ristretto
-    - python-pip
-    - python-imaging
-    - python-smbus
-    - i2c-tools
-    - openjdk-8-jdk 
-    - wireshark
-    - firmware-realtek
-    - mitmproxy
-    - protobuf-compiler
-
 - name: Install PiRogue files
   git:
     repo: https://github.com/U039b/PiRogue.git
     dest: /usr/share/PiRogue
+    force: yes
 
 - name: Change hostname
   hostname:
     name: PiRogue
+
+- name: hostname is resolvable
+  lineinfile:
+    path: "/etc/hosts"
+    regexp: "^127\\.0\\.0\\.1"
+    line: "127.0.0.1  hostname PiRogue"
 
 - name: Fix locale issue
   lineinfile:
@@ -44,25 +28,26 @@
     regexp: '^export LC_ALL='
     line: 'export LC_ALL="en_US.UTF-8"'
 
+- name: locale en_US.UTF-8 UTF-8 is available
+  lineinfile:
+    path: "/etc/locale.gen"
+    regexp: ".*en_US\\.UTF\\-8 UTF\\-8"
+    line: "en_US.UTF-8 UTF-8"
+  notify: reload locales
+
 - name: Configure wlan1 interface
   copy:
     src: interfaces
     dest: /etc/network/interfaces
 
 - name: Install dnsmasq
-  apt: pkg={{item}} state=installed update_cache=yes cache_valid_time=10800
+  apt:
+    pkg: "{{item}}"
+    state: "present"
+    update_cache: yes
+    cache_valid_time: 10800
   with_items:
     - dnsmasq
-
-- name: Download hostapd 2.4
-  get_url:
-    url: http://ftp.fr.debian.org/debian/pool/main/w/wpa/hostapd_2.4-1+deb9u1_armhf.deb
-    dest: /tmp/hostapd.deb
-    checksum: sha256:7f303c1de2cf3dd14650b1b1c5b939fa8bef236c291cb7d4e665bdd5d5388cec
-
-- name: Install hostapd
-  apt:
-    deb: /tmp/hostapd.deb
 
 - name: Enable service hostapd and ensure it is not masked
   systemd:
@@ -76,33 +61,46 @@
     enabled: yes
     masked: no
 
-- name: Configure hostapd
-  lineinfile:
-    path: /etc/default/hostapd
-    regexp: '^DAEMON_CONF='
-    line: 'DAEMON_CONF="/usr/share/PiRogue/hostapd/hostapd.conf"'
-
 - name: Configure dnsmasq
   file:
     src: /usr/share/PiRogue/dnsmasq/dnsmasq.conf
     dest: /etc/dnsmasq.d/pirogue.conf
     state: link
 
-- name: Configure the firewall
+- name: /usr/share/PiRogue/hostapd/ folder exists
   file:
-    src: /usr/share/PiRogue/firewall/90pirogue.sh
-    dest: /etc/NetworkManager/dispatcher.d/90pirogue.sh
-    state: link
+    path: "/usr/share/PiRogue/hostapd/"
+    state: "directory"
+    
+- name: hostapd configuration file is present
+  template:
+    src: "hostapd.conf.j2"
+    dest: "/usr/share/PiRogue/hostapd/hostapd.conf"
+    mode: "0760"
+    owner: root
+    group: root
+  notify: reload hostapd
+
+- name: hostapd daemon is configured
+  lineinfile:
+    path: /etc/default/hostapd
+    regexp: '^DAEMON_CONF='
+    line: 'DAEMON_CONF="/usr/share/PiRogue/hostapd/hostapd.conf"'
+
+- name: bash script are executable
+  file:
+    path: "{{ item }}"
+    mode: "0750"
+  loop:
+    - /usr/share/PiRogue/install.sh
+    - /usr/share/PiRogue/proxy/transparent.sh
+    - /usr/share/PiRogue/proxy/stop_transparent.sh
+    - /usr/share/PiRogue/firewall/90pirogue.sh
 
 - name: Configure network routing
   copy:
     src: sysctl_pyrogue.conf
     dest: /etc/sysctl.d/pirogue.conf
-
-- name: Configure boot
-  copy:
-    src: config.txt
-    dest: /boot/config.txt
 
 - name: Configure modules
   copy:
@@ -113,6 +111,8 @@
   copy:
     src: cron_pirogue
     dest: /etc/cron.d/pirogue
+
+- include: "enable-i2c.yml"
 
 - name: Add the service displaying details on screen
   file:
@@ -137,7 +137,19 @@
 - name: Install python tools
   pip: name={{item}}
   with_items:
-    - RPi.GPIO   
+    - RPi.GPIO
+
+- name: enable camera (step 1)
+  lineinfile:
+    path: "/boot/config.txt"
+    regexp: "^start_x"
+    line: "start_x=1"
+
+- name: enable camera (step 2)
+  lineinfile:
+    path: "/boot/config.txt"
+    regexp: "^gpu_mem"
+    line: "gpu_mem=128"
 
 - name: Remove useless packages from the cache
   apt:

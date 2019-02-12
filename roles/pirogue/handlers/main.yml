@@ -1,0 +1,14 @@
+---
+- name: "reload keyboard config"
+  shell: "dpkg-reconfigure keyboard-configuration && systemctl restart keyboard-setup"
+
+- name: reload hostapd
+  systemd:
+    name: "hostapd"
+    enabled: yes
+    state: "reloaded"
+
+- name: reload locales
+  command: locale-gen
+    
+    

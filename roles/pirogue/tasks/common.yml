@@ -1,0 +1,95 @@
+---
+- name: keyboard layout is set
+  template: 
+    src: "keyboard.j2"
+    dest: "/etc/default/keyboard"
+  notify: "reload keyboard config"
+
+- name: "check if pirogue_unix_password is defined"
+  fail:
+    msg: "pirogue_unix_password must be set"
+  when: "pirogue_unix_password is not defined or pirogue_unix_password == ''"
+
+- name: pirogue default unix user exists
+  user:
+    name: "{{ pirogue_unix_user }}"
+    password: "{{ pirogue_unix_password }}"
+    comment: "default user for pi* tools series"
+    shell: "/bin/bash"
+    groups: "sudo"
+    append: yes
+
+- name: pi user cannot issue  sudo commands without a password
+  file:
+    path: "/etc/sudoers.d/010_pi-nopasswd"
+    state: "absent"
+  # when: "pirogue_unix_password is defined and pirogue_unix_password != ''"
+
+- name: Install common dependencies
+  apt:
+    pkg: "{{item}}"
+    state: "present"
+    update_cache: yes
+    cache_valid_time: 10800
+  loop:
+    - acl
+    - python3
+    - git
+    - virtualenv
+    - bash-completion
+    - vim
+    - dexdump
+    - adb
+    - gcc
+    - htop
+    - ntp
+    - build-essential
+    - python-dev
+    - python-pip
+    - python-imaging
+    - python-smbus
+    - i2c-tools
+    - openjdk-8-jdk 
+    - wireshark
+    - firmware-realtek
+    - protobuf-compiler
+    - hostapd
+
+- name: mitmproxy from debian repositories is uninstalled (we will use one provided by virtualenv setup)
+  apt:
+    pkg: "mitmproxy"
+    state: "absent"
+    purge: yes
+
+- name: pirogue pi common folder is present
+  file:
+    path: "{{ pirogue_pi_common_folder }}"
+    state: "directory"
+    owner: "{{ pirogue_unix_user }}"
+    group: "{{ pirogue_unix_user }}"
+    recurse: yes
+    mode: "o-rwx"
+
+- name: pirogue common venv exists
+  command: "virtualenv -p python3 {{ pirogue_common_venv }}"
+  args:
+    creates:"{{ pirogue_common_venv }}"
+  become_user: "{{ pirogue_unix_user }}"
+
+- name: python packages are installed in pirogue common venv
+  pip:
+    name: "{{ item }}"
+    virtualenv: "{{ pirogue_common_venv }}"
+  loop:
+    - mitmproxy==3.0.4
+  become_user: "{{ pirogue_unix_user }}"
+
+- name: mitmproxy executables are linked from pirogue common venv to /usr/local/bin
+  file:
+    src: "/usr/share/Pi-common/venv/bin/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    state: link
+  loop:
+    - mitmdump
+    - mitmproxy
+    - mitmweb

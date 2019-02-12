@@ -1,6 +1,30 @@
 auto lo
 iface lo inet loopback
 
+# PiRogue can use eth0 or wlan0 raspberrypi network interface as
+# upstream.
+
+# wlan1 is a network interface provided by a USB Wifi dongle
+# wlan1 acts as Wifi access point (managed by hostapd) and provides
+# IP addresses for Wifi clients using dnsmasq (which also acts as a
+# DNS resolver. PiRogue will route network traffic from Wifi clients
+# to one of the available upstream interfaces (eth0, wlan0)
+
+# to use wlan0 as an upstream you may have to configure manually
+# wpa_supplicant: this is not automatically done yet
+
+auto eth0
+allow-hotplug eth0
+iface eth0 inet dhcp
+  up /usr/share/PiRogue/firewall/90pirogue.sh eth0 up || true
+  down /usr/share/PiRogue/firewall/90pirogue.sh eth0 down || true
+
+# auto wlan0
+# allow-hotplug wlan0
+# iface wlan0 inet dhcp
+#   up /usr/share/PiRogue/firewall/90pirogue.sh wlan0 up || true
+#   down /usr/share/PiRogue/firewall/90pirogue.sh wlan0 down || true
+
 auto wlan1
 allow-hotplug wlan1
 iface wlan1 inet static

@@ -1,0 +1,30 @@
+---
+
+# main unix user for everyday use of pirogue
+pirogue_unix_user: "pifowl"
+
+# this variable must be set to complete the setup
+# when a value is affected, pi user will not be allowed to use sudo without a password anymore
+# password must be encrypted using ```mkpasswd --method=sha-512```
+pirogue_unix_password: "$6$7XvPI/rCHcL9MO$pahM5NmBmwuvvVQtZ/egTIzi4X9VHrHbh.VZTspjFbs4kB/zMwUfMsprwOaDrSNftpEbz3ac5aiIkM6Yn9ypy." # if password not set do not remove /etc/sudoers.d/010_pi-nopasswd
+
+pirogue_pi_common_folder: "/usr/share/Pi-common"
+pirogue_common_venv: "{{ pirogue_pi_common_folder }}/venv"
+
+pirogue_keyboard_model: "pc105" # allowed values: /usr/share/X11/xkb/rules/base.lst
+pirogue_keyboard_layout: "fr"
+
+# Wifi Channel (1-13)
+pirogue_wifi_channel: 6
+
+# Wifi SSID
+pirogue_wifi_ssid: "PiRogue"
+
+# If set to true, create an open Wifi Access Point (devices can connect without a password)
+pirogue_wifi_disable_wpa2: False
+
+# Wifi WPA2 PSK
+pirogue_wifi_wpa2_password: "pirogue-password"
+
+
+

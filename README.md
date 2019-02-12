@@ -96,9 +96,13 @@ Edit the file `inventory.ini` and correct the IP address (the one you got at *Ge
 pirogue_1 ansible_host=192.168.1.20  ansible_ssh_user=root
 ```
 
+### Configure your PiRogue
+
+Edit *roles/pirogue/defaults/main.yml* to match you requirements passwords, wifi settings, ...
+
 ### Run the playbook
 Simply run the following command: 
 ```
-ansible-playbook -i inventory.ini --ask-pass pirogue.yml
+ansible-playbook -i inventory.ini --become --ask-become-pass --ask-pass --diff pirogue.yml
 ```
 It will ask you an SSH password, use `toor` if you do not have changed your password on your PiRogue, otherwise, use your new password.

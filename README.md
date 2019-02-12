@@ -83,7 +83,7 @@ Here, our raspberrypi has 192.168.1.20 IP address. You must remember this addres
 
 # Installing PiRogue tools
 
-The following steps must be conducted on a computer which will remotely install the PiRogue customization on your fresh Kali GNU/Linux install. 
+The following steps must be conducted on a computer which will remotely install the PiRogue customization on your fresh Raspbian GNU/Linux install. 
 
 ## How to use the playbook
 ### Install ansible
